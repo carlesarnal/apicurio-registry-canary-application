@@ -50,7 +50,7 @@ public class CanaryMain {
                 Thread.sleep(500);
             }
         } catch (Exception e) {
-            log.error("Exception detected in the canary application", e);
+            log.error("Exception detected in the canary application: {}", e.getCause(), e);
         }
     }
 

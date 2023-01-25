@@ -45,10 +45,10 @@
         <maven.compiler.target>11</maven.compiler.target>
         <version.maven-javadoc-plugin>3.4.0</version.maven-javadoc-plugin>
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
+        <version.maven-jar-plugin>3.2.1</version.maven-jar-plugin>
         <version.maven-compiler-plugin>3.10.1</version.maven-compiler-plugin>
         <apicurio.registry.version>2.4.1.Final</apicurio.registry.version>
-
-
+        <slf4j.version>2.0.6</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -65,6 +65,22 @@
         <dependency>
             <groupId>io.apicurio</groupId>
             <artifactId>apicurio-registry-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>apicurio-codegen-quarkus-extension</artifactId>
+                    <groupId>io.apicurio</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
     </dependencies>
 
@@ -94,17 +110,27 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${version.maven-javadoc-plugin}</version>
+                <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>attach-javadocs</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <!-- ... -->
+                    <archive>
+                        <manifest>
+                            <mainClass>io.apicurio.registry.canary.CanaryMain</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
