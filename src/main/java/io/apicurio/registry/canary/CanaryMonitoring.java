@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 import static io.apicurio.registry.canary.util.CanaryUtil.createBasicClient;
@@ -31,18 +32,13 @@ import static io.apicurio.registry.canary.util.CanaryUtil.createOauthClient;
 @Path("/")
 public class CanaryMonitoring {
 
-    private static final RegistryClient oAuthclient;
-    private static final RegistryClient basicClient;
+    private RegistryClient oAuthclient;
+    private RegistryClient basicClient;
     private long failedReads = 0;
     private long failedCreates = 0;
     private long failedDeletes = 0;
 
     private static final Logger log = LoggerFactory.getLogger(CanaryMonitoring.class);
-
-    static {
-        oAuthclient = createOauthClient();
-        basicClient = createBasicClient();
-    }
 
     @Gauge(name = "failedReads", unit = MetricUnits.NONE, description = "Failed read operations in the Canary application.")
     public Long failedReads() {
@@ -60,7 +56,11 @@ public class CanaryMonitoring {
     }
 
     public void startMonitoring(@Observes StartupEvent startupEvent) {
-        int concurrentTasks = 5;
+
+        oAuthclient = createOauthClient();
+        basicClient = createBasicClient();
+
+        int concurrentTasks = 2;
 
         try {
             concurrentTasks = Integer.parseInt(System.getenv("CONCURRENT_TASKS"));
