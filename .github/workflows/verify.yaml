@@ -1,0 +1,83 @@
+name: Verify Build Workflow
+on:
+  push:
+    paths-ignore:
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README*'
+      - 'CODE_OF_CONDUCT*'
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README*'
+      - 'CODE_OF_CONDUCT*'
+    branches: [main]
+
+jobs:
+  build-verify:
+    name: Verify Build
+    runs-on: ubuntu-20.04
+    if: github.repository_owner == 'Apicurio'
+    steps:
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Check Java Version
+        run: java -version
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Verify Build
+        env:
+          SKIP_TESTS: "false"
+          BUILD_FLAGS: '-Dmaven.wagon.httpconnectionManager.maxTotal=30 -Dmaven.wagon.http.retryHandler.count=5 --no-transfer-progress'
+        run: |
+          make build-project
+
+      - name: Build Images for Docker.io
+        if: github.event_name == 'push'
+        env:
+          IMAGE_TAG: "snapshot"
+        run: make build-image
+
+      - name: List All The Images
+        if: github.event_name == 'push'
+        run: docker images
+
+      - name: Login to DockerHub Registry
+        if: github.event_name == 'push'
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Push Images To Docker.io
+        if: github.event_name == 'push'
+        env:
+          IMAGE_TAG: "snapshot"
+        run: make push-image
+
+      - name: Login to Quay.io Registry
+        if: github.event_name == 'push'
+        run: docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" quay.io
+
+      - name: Build Images for Quay.io
+        if: github.event_name == 'push'
+        env:
+          IMAGE_REPO: "quay.io"
+          IMAGE_TAG: "latest"
+        run: make build-image
+
+      - name: List All The Images
+        if: github.event_name == 'push'
+        run: docker images
+
+      - name: Push Images To Quay.io
+        if: github.event_name == 'push'
+        env:
+          IMAGE_REPO: "quay.io"
+          IMAGE_TAG: "latest"
+        run: make push-image
+
