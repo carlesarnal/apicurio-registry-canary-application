@@ -1,10 +1,10 @@
-package io.apicurio.registry.canary;
+package io.apicurio.registry.probe;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import io.apicurio.registry.canary.util.CanaryUtil;
+import io.apicurio.registry.probe.util.ProbeUtil;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.v2.beans.ArtifactMetaData;
 import io.quarkus.runtime.StartupEvent;
@@ -14,11 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import javax.ws.rs.Path;
 
-import static io.apicurio.registry.canary.util.CanaryUtil.createBasicClient;
-import static io.apicurio.registry.canary.util.CanaryUtil.createOauthClient;
+import static io.apicurio.registry.probe.util.ProbeUtil.createBasicClient;
+import static io.apicurio.registry.probe.util.ProbeUtil.createOauthClient;
 
 /**
  * Simple application performing the most basic operations of Apicurio Registry.
@@ -30,7 +29,7 @@ import static io.apicurio.registry.canary.util.CanaryUtil.createOauthClient;
  * @author Carles Arnal <carnalca@redhat.com>
  */
 @Path("/")
-public class CanaryMonitoring {
+public class ProbeMonitoring {
 
     private RegistryClient oAuthclient;
     private RegistryClient basicClient;
@@ -38,19 +37,19 @@ public class CanaryMonitoring {
     private long failedCreates = 0;
     private long failedDeletes = 0;
 
-    private static final Logger log = LoggerFactory.getLogger(CanaryMonitoring.class);
+    private static final Logger log = LoggerFactory.getLogger(ProbeMonitoring.class);
 
-    @Gauge(name = "failedReads", unit = MetricUnits.NONE, description = "Failed read operations in the Canary application.")
+    @Gauge(name = "failedReads", unit = MetricUnits.NONE, description = "Failed read operations in the Probe application.")
     public Long failedReads() {
         return failedReads;
     }
 
-    @Gauge(name = "failedCreates", unit = MetricUnits.NONE, description = "Failed create operations in the Canary application.")
+    @Gauge(name = "failedCreates", unit = MetricUnits.NONE, description = "Failed create operations in the Probe application.")
     public Long failedCreates() {
         return failedCreates;
     }
 
-    @Gauge(name = "failedDeletes", unit = MetricUnits.NONE, description = "Failed delete operations in the Canary application.")
+    @Gauge(name = "failedDeletes", unit = MetricUnits.NONE, description = "Failed delete operations in the Probe application.")
     public Long failedDeletes() {
         return failedDeletes;
     }
@@ -97,36 +96,36 @@ public class CanaryMonitoring {
                 readArtifact(client, artifactId);
                 //deleteArtifact(client, artifactId);
             } catch (Exception e) {
-                log.error("Exception detected in the canary application: {}", e.getCause(), e);
+                log.error("Exception detected in the Probe application: {}", e.getCause(), e);
             }
         }
     }
 
     private void createArtifact(RegistryClient client, String artifactId) {
         try {
-            CanaryUtil.createSchemaInServiceRegistry(client, artifactId, Constants.SCHEMA);
+            ProbeUtil.createSchemaInServiceRegistry(client, artifactId, Constants.SCHEMA);
         } catch (Exception e) {
             failedCreates++;
-            log.error("Exception detected in the canary application: {}", e.getCause(), e);
+            log.error("Exception detected in the Probe application: {}", e.getCause(), e);
         }
     }
 
     private void readArtifact(RegistryClient client, String artifactId) {
         try {
-            final ArtifactMetaData schemaFromRegistry = CanaryUtil.getSchemaFromRegistry(client,
+            final ArtifactMetaData schemaFromRegistry = ProbeUtil.getSchemaFromRegistry(client,
                     artifactId);
         } catch (Exception e) {
             failedReads++;
-            log.error("Exception detected while reading an artifact in the canary application: {}", e.getCause(), e);
+            log.error("Exception detected while reading an artifact in the Probe application: {}", e.getCause(), e);
         }
     }
 
     private void deleteArtifact(RegistryClient client, String artifactId) {
         try {
-            CanaryUtil.deleteSchema(client, artifactId);
+            ProbeUtil.deleteSchema(client, artifactId);
         } catch (Exception e) {
             failedDeletes++;
-            log.error("Exception detected while reading an artifact in the canary application: {}", e.getCause(), e);
+            log.error("Exception detected while reading an artifact in the Probe application: {}", e.getCause(), e);
         }
     }
 }

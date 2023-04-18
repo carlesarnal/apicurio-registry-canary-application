@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.apicurio</groupId>
-    <artifactId>apicurio-registry-canary-application</artifactId>
+    <artifactId>apicurio-registry-probe-application</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
     <url>https://www.apicur.io/</url>
-    <description>Canary application for Apicurio Registry multitenant deployments.</description>
+    <description>Probe application for Apicurio Registry multitenant deployments.</description>
 
     <organization>
         <name>Red Hat</name>

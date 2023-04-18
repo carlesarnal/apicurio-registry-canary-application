@@ -1,1 +1,1 @@
-# apicurio-registry-canary
+# apicurio-registry-probe

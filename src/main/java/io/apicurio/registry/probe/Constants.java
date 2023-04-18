@@ -1,4 +1,4 @@
-package io.apicurio.registry.canary;
+package io.apicurio.registry.probe;
 
 public class Constants {
 
