@@ -15,7 +15,7 @@ override BGreen := \033[1;32m
 BUILD_FLAGS ?=
 SKIP_TESTS ?= false
 IMAGE_ORG ?= apicurio
-IMAGE_REPO ?= docker.io
+IMAGE_REPO ?= quay.io
 IMAGE_TAG ?= latest
 IMAGE_NAME ?= $(MODULE_NAME)
 DOCKERFILE_NAME ?= Dockerfile
@@ -63,7 +63,7 @@ build-image:
 	@echo "======================================================================"
 	@echo " Building Image $(IMAGE_REPO)/$(IMAGE_ORG)/$(IMAGE_NAME):$(IMAGE_TAG)"
 	@echo "======================================================================"
-	docker build -f $(DOCKERFILE_PATH)/$(DOCKERFILE_NAME) -t $(IMAGE_REPO)/$(IMAGE_ORG)/$(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_BUILD_WORKSPACE)
+	docker build -f $(DOCKERFILE_PATH)/$(DOCKERFILE_NAME) -t $(IMAGE_REPO)/$(IMAGE_ORG)/$(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_BUILD_WORKSPACE) --load
 
 
 .PHONY: push-image ## Push docker image

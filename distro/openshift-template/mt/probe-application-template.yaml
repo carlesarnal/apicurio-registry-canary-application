@@ -1,0 +1,106 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: probe-application-registry
+labels:
+  template: probe-application-registry
+objects:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app: probe-application
+        template: probe-application-registry
+      name: probe-application
+    spec:
+      selector:
+        matchLabels:
+          app: probe-application
+          template: probe-application-registry
+      replicas: ${{PROBE_APPLICATION_REPLICAS}}
+      strategy:
+        rollingUpdate:
+          maxSurge: 25%
+          maxUnavailable: 25%
+        type: RollingUpdate
+      template:
+        metadata:
+          labels:
+            app: probe-application
+            template: probe-application-registry
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: app
+                          operator: In
+                          values:
+                            - probe-application
+                        - key: template
+                          operator: In
+                          values:
+                            - probe-application-registry
+                    topologyKey: failure-domain.beta.kubernetes.io/zone
+                  weight: 100
+          serviceAccount: ${SERVICE_ACCOUNT_NAME}
+          serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+
+          containers:
+            - name: probe-application
+              image: ${IMAGE_REGISTRY}/${PROBE_APPLICATION_IMAGE_REPOSITORY}:${IMAGE_TAG}
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: QUARKUS_HTTP_PORT
+                  value: "8080"
+                - name: CONCURRENT_TASKS
+                  value: ${CONCURRENT_TASKS}
+                - name: REGISTRY_URL
+                  value: ${REGISTRY_URL}
+                - name: AUTH_TOKEN_ENDPOINT
+                  value: ${AUTH_TOKEN_ENDPOINT}
+                - name: AUTH_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${PROBE_APPLICATION_CLIENT_SECRET_NAME}
+                      key: client-id
+                - name: AUTH_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${PROBE_APPLICATION_CLIENT_SECRET_NAME}
+                      key: client-secret
+
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /q/health/live
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 5
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                  name: http
+              readinessProbe:
+                failureThreshold: 5
+                httpGet:
+                  path: /q/health/ready
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 5
+              resources:
+                limits:
+                  cpu: ${PROBE_APPLICATION_CPU_LIMIT}
+                  memory: ${PROBE_APPLICATION_MEMORY_LIMIT}
+                requests:
+                  cpu: ${PROBE_APPLICATION_CPU_REQUEST}
+                  memory: ${PROBE_APPLICATION_MEMORY_REQUEST}
+              terminationMessagePath: /dev/termination-log

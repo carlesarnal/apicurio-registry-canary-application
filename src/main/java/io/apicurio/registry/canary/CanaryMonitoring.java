@@ -91,7 +91,11 @@ public class CanaryMonitoring {
                 //Wait for the artifact to be available.
                 Thread.sleep(500);
                 readArtifact(client, artifactId);
-                deleteArtifact(client, artifactId);
+                readArtifact(client, artifactId);
+                readArtifact(client, artifactId);
+                readArtifact(client, artifactId);
+                readArtifact(client, artifactId);
+                //deleteArtifact(client, artifactId);
             } catch (Exception e) {
                 log.error("Exception detected in the canary application: {}", e.getCause(), e);
             }
